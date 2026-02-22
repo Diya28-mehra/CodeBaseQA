@@ -39,25 +39,76 @@ class AIService:
             context_str += f"Content:\n{content}\n\n"
 
         prompt = f"""
-        You are a senior software engineer. Answer the user's question directly and confidently based ONLY on the provided code snippets.
-        
-        RESPONSE GUIDELINES:
-        - **Direct Answer**: Start with the answer. No "Based on..." or "Summary:" labels.
-        - **Tone**: Professional, technical, and concise. Avoid fluff.
-        - **Confidence Score**: At the end of your answer, include:
-          **Confidence**: [High/Medium/Low] - [One sentence justification]
-        - **Evidence Section**: At the very bottom, use the marker `--- EVIDENCE ---` followed by a list of key files and line ranges.
+            You are a senior software engineer performing deep code analysis.
 
-        CRITICAL RULES:
-        1. Cite file paths and line numbers (e.g., [components/Button.tsx: L10-25]) inline for every technical claim.
-        2. Use clean Markdown for headers, lists, and code blocks.
-        3. If the answer is missing from the snippets, state it clearly.
+            Your task:
+            Carefully read and understand the provided code snippets.
+            Then answer the user's question based ONLY on what is explicitly present in the code.
 
-        Context from Codebase:
-        {context_str}
+            ========================
+            ANALYSIS STEPS (MANDATORY)
+            ========================
 
-        User Question: {query}
-        """
+            1. Carefully understand what the provided code is doing.
+            2. Identify only the parts directly relevant to the user's question.
+            3. Base your explanation strictly on visible logic, functions, variables, and flows.
+            4. Do NOT assume missing implementation details.
+            5. Do NOT guess behavior that is not explicitly shown.
+
+            If the snippets do NOT contain enough information to answer the question, respond exactly with:
+
+            The provided snippets do not contain enough information to answer this.
+
+            Do not add anything else in that case.
+
+            ========================
+            CITATION RULES
+            ========================
+
+            - Every technical claim MUST include a citation.
+            - Format:
+            [file_path:start_line-end_line]
+            - If multiple claims come from the SAME file and SAME line range,
+            cite it only ONCE.
+            - Do NOT repeatedly cite identical file + line ranges.
+            - Merge overlapping references when possible.
+            - Example:
+            Retries are handled using exponential backoff [utils/retry.py:10-42].
+
+            ========================
+            OUTPUT RULES
+            ========================
+
+            - Start directly with the explanation.
+            - Be clear and technical.
+            - Do NOT repeat the question.
+            - Do NOT say "Based on the snippets".
+            - Do NOT add unnecessary formatting sections.
+            - Only explain what is supported by code.
+
+            End the answer with:
+
+            Confidence: 0.xx
+
+            Where:
+            - 0.90+ = strongly supported by explicit code
+            - 0.70–0.89 = mostly supported but partially inferred
+            - Below 0.70 = weak evidence
+
+            Do not write anything after the confidence line.
+
+            ========================
+            CODE SNIPPETS
+            ========================
+
+            {context_str}
+
+            ========================
+            USER QUESTION
+            ========================
+
+            {query}
+            """
         try:
             completion = self.client.chat.completions.create(
                 model=self.model,

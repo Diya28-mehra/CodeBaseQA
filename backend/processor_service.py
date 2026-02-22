@@ -20,6 +20,7 @@ class ProcessorService:
             # If the file is smaller than chunk size, take it as one chunk
             if total_lines <= self.chunk_size:
                 all_chunks.append({
+                    "repo_url": file["repo_url"],
                     "file_path": path,
                     "start_line": 1,
                     "end_line": total_lines,
@@ -34,6 +35,7 @@ class ProcessorService:
                 chunk_lines = lines[start:end]
                 
                 all_chunks.append({
+                    "repo_url": file["repo_url"],
                     "file_path": path,
                     "start_line": start + 1,
                     "end_line": end,

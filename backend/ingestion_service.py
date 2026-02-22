@@ -46,6 +46,7 @@ class IngestionService:
                             with open(full_path, 'r', encoding='utf-8') as f:
                                 content = f.read()
                                 processed_files.append({
+                                    "repo_url": repo_url,
                                     "path": str(relative_path),
                                     "content": content
                                 })

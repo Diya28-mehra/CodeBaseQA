@@ -41,7 +41,7 @@ class VectorService:
 
         data_to_insert = []
         total = len(chunks)
-        print(f"🚀 Processing {total} chunks via Hugging Face Inference API...")
+        print(f"Processing {total} chunks via Hugging Face Inference API...")
 
         for i, chunk in enumerate(chunks):
             try:
@@ -56,7 +56,7 @@ class VectorService:
                 })
                 
                 if (i + 1) % 10 == 0:
-                    print(f"✅ Generated {i + 1}/{total} embeddings...")
+                    print(f"Generated {i + 1}/{total} embeddings...")
                 
                 time.sleep(0.1)  # reduced from 0.5s to 0.1s
             
@@ -64,7 +64,7 @@ class VectorService:
                 print(f"Error for {chunk['file_path']}: {e}")
             
         if data_to_insert:
-            print(f"💾 Saving {len(data_to_insert)} chunks to Supabase...")
+            print(f"Saving {len(data_to_insert)} chunks to Supabase...")
             batch_size = 50
             for j in range(0, len(data_to_insert), batch_size):
                 sub_batch = data_to_insert[j:j + batch_size]
@@ -73,7 +73,7 @@ class VectorService:
                 except Exception as e:
                     print(f"Supabase error during batch {j}: {e}")
             
-            print("✨ Ingestion Complete! All chunks stored.")
+            print("Ingestion Complete! All chunks stored.")
             return True
         return None
 
@@ -81,9 +81,9 @@ class VectorService:
         """
         Converts query to embedding and finds similar code in Supabase.
         """
-        print(f"🔍 Searching for: {query}")
+        print(f"Searching for: {query}")
         query_embedding = self.get_embedding(query)
-        print(f"✅ Generated query embedding (Size: {len(query_embedding)})")
+        print(f"Generated query embedding (Size: {len(query_embedding)})")
         
         rpc_params = {
             "query_embedding": query_embedding,
@@ -93,9 +93,9 @@ class VectorService:
         
         try:
             result = self.supabase.rpc("match_code_chunks", rpc_params).execute()
-            print(f"🔎 Found {len(result.data)} matches.")
+            print(f"Found {len(result.data)} matches.")
             return result.data
         except Exception as e:
-            print(f"❌ Supabase Search Error: {e}")
+            print(f"Supabase Search Error: {e}")
             return []
             
