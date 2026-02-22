@@ -89,10 +89,15 @@ async def ask_question(query_data: Query):
                 "proof": []
             }
         
-        # 2. Generate answer using AIService
-        answer = ai_service.generate_answer(query_data.query, relevant_chunks)
+        # 2. Fetch History
+        history = session_service.get_recent_sessions(limit=5)
+        # Reverse to get chronological order (Oldest -> Newest)
+        history.reverse()
+
+        # 3. Generate answer using AIService
+        answer = ai_service.generate_answer(query_data.query, relevant_chunks, history)
         
-        # 3. Save to History 
+        # 4. Save to History 
         session_service.save_session(query_data.query, answer, relevant_chunks)
         
         return {

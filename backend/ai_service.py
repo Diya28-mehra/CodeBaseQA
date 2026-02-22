@@ -13,9 +13,9 @@ class AIService:
         
         self.model = "llama-3.1-8b-instant"
 
-    def generate_answer(self, query: str, context_chunks: List[Dict]) -> str:
+    def generate_answer(self, query: str, context_chunks: List[Dict], history: List[Dict] = []) -> str:
         """
-        Syntheses an answer based on provided code chunks.
+        Syntheses an answer based on provided code chunks and conversation history.
         Optimized to stay within Groq Free Tier TPM limits (6000 tokens).
         """
         if not self.client:
@@ -23,6 +23,15 @@ class AIService:
 
         if not context_chunks:
             return "I couldn't find any relevant code snippets."
+
+        # Process History
+        history_str = ""
+        if history:
+            history_str = "=== CONVERSATION HISTORY ===\n"
+            # Limit to last 3 interactions to save tokens
+            for session in history[-3:]: 
+                history_str += f"User: {session.get('query', '')}\n"
+                history_str += f"Assistant: {session.get('answer', '')}\n\n"
 
         context_str = ""
         # We only take the top 3 most relevant chunks to save tokens
@@ -42,8 +51,10 @@ class AIService:
             You are a senior software engineer performing deep code analysis.
 
             Your task:
-            Carefully read and understand the provided code snippets.
-            Then answer the user's question based ONLY on what is explicitly present in the code.
+            Carefully read and understand the provided code snippets and the conversation history.
+            Then answer the user's question based ONLY on what is explicitly present in the code or previously discussed.
+            
+            {history_str}
 
             ========================
             ANALYSIS STEPS (MANDATORY)

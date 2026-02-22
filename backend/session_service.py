@@ -27,7 +27,7 @@ class SessionService:
             print(f"Error saving session: {e}")
             return None
 
-    def get_recent_sessions(self, limit: int = 10):
+    def get_recent_sessions(self, limit: int = 5):
         """
         Retrieves the last X Q&A sessions.
         """
