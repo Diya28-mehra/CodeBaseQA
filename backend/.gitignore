@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# Environments
+.env
+
+# Deployment
+render.yaml (optional, keep if you want it versioned)
+
+# IDEs
+.vscode/
+.idea/
