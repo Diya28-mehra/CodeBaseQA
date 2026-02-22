@@ -12,3 +12,4 @@ huggingface_hub
 requests
 groq
 gunicorn
+numpy
