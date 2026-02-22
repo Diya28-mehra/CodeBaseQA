@@ -8,11 +8,18 @@ import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
+interface Proof {
+    file_path: string
+    start_line: number
+    end_line: number
+    content: string
+}
+
 interface Message {
     id: string
     role: 'user' | 'bot'
     text: string
-    proof?: any[]
+    proof?: Proof[]
 }
 
 // --- Senior Developer Polish: Sub-Components (Outside for performance) ---
@@ -46,7 +53,7 @@ const FileTag = ({ file, onClick }: { file: string, onClick: () => void }) => (
     </button>
 )
 
-const BotResponse = ({ text, proof, onShowProof }: { text: string, proof?: any[], onShowProof: (p: any) => void }) => {
+const BotResponse = ({ text, proof, onShowProof }: { text: string, proof?: Proof[], onShowProof: (p: Proof) => void }) => {
     const [isEvidenceOpen, setIsEvidenceOpen] = useState(false)
 
     // Parse Confidence
@@ -69,9 +76,9 @@ const BotResponse = ({ text, proof, onShowProof }: { text: string, proof?: any[]
                 <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
-                        p: ({ node, ...props }) => <p className="mb-4 last:mb-0 leading-relaxed" {...props} />,
-                        code: ({ node, ...props }) => <code className="bg-white/10 px-1 rounded text-primary-hover font-mono" {...props} />,
-                        pre: ({ node, ...props }) => <pre className="bg-black/50 p-4 rounded-2xl overflow-x-auto border border-white/5 mb-4" {...props} />,
+                        p: ({ ...props }) => <p className="mb-4 last:mb-0 leading-relaxed" {...props} />,
+                        code: ({ ...props }) => <code className="bg-white/10 px-1 rounded text-primary-hover font-mono" {...props} />,
+                        pre: ({ ...props }) => <pre className="bg-black/50 p-4 rounded-2xl overflow-x-auto border border-white/5 mb-4" {...props} />,
                     }}
                 >
                     {mainBody}
@@ -124,8 +131,8 @@ export default function ChatInterface({
     onShowProof,
     initialHistory = []
 }: {
-    onShowProof: (proof: any) => void
-    initialHistory?: any[]
+    onShowProof: (proof: Proof) => void
+    initialHistory?: { query: string, answer: string, proof: Proof[] }[]
 }) {
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
@@ -164,7 +171,7 @@ export default function ChatInterface({
                 proof: res.data.proof
             }
             setMessages(prev => [...prev, botMsg])
-        } catch (err) {
+        } catch (_err) {
             const botMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'bot',

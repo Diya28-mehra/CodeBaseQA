@@ -19,8 +19,11 @@ export default function IngestionPanel({ onComplete }: { onComplete: () => void 
             await axios.post(`${apiUrl}/ingest/github`, { url: githubUrl })
             setStatus({ type: 'success', msg: 'Codebase ingested successfully! Vectors created.' })
             setTimeout(onComplete, 2000)
-        } catch (err: any) {
-            setStatus({ type: 'error', msg: err.response?.data?.detail || 'Ingestion failed' })
+        } catch (err: unknown) {
+            const errorMsg = axios.isAxiosError(err)
+                ? err.response?.data?.detail
+                : (err as Error).message
+            setStatus({ type: 'error', msg: errorMsg || 'Ingestion failed' })
         } finally {
             setLoading(false)
         }

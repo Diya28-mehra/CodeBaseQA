@@ -2,14 +2,20 @@
 
 import React from 'react'
 import { X, FileCode, Copy, Check } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
+
+interface Proof {
+    file_path: string
+    start_line: number
+    end_line: number
+    content: string
+}
 
 export default function ProofViewer({
     proof,
     onClose
 }: {
-    proof: any
+    proof: Proof
     onClose: () => void
 }) {
     const [copied, setCopied] = React.useState(false)

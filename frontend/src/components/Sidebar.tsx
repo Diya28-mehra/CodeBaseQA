@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { MessageSquare, Clock, Plus, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 
 interface Session {
     id: string
@@ -17,7 +17,7 @@ export default function Sidebar({
     activeSessionId,
     isCollapsed
 }: {
-    onSelectSession: (session: any) => void
+    onSelectSession: (session: Session) => void
     activeSessionId?: string
     isCollapsed: boolean
 }) {
