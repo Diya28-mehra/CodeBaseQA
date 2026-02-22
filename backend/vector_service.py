@@ -6,35 +6,30 @@ from huggingface_hub import InferenceClient
 
 class VectorService:
     def __init__(self):
-        # Using the official InferenceClient for better reliability
-        # Model: all-MiniLM-L6-v2 (Dimensions: 384)
         self.client = InferenceClient(
             model="sentence-transformers/all-MiniLM-L6-v2",
             token=os.getenv("HUGGINGFACE_API_KEY")
         )
         
-        # Configure Supabase
         self.supabase: Client = create_client(
             os.getenv("SUPABASE_URL"),
             os.getenv("SUPABASE_SERVICE_ROLE_KEY")
         )
 
-    def get_embedding(self, text: str) -> List[float]:
+    def get_embedding(self, text: str, retry: bool = True) -> List[float]:
         """
         Converts text into a numerical vector using Hugging Face InferenceClient.
         """
         try:
-            # InferenceClient handles the URL and authentication automatically
             embedding = self.client.feature_extraction(text)
-            # feature_extraction might return a nested list or a flat list depending on input
             if isinstance(embedding, list) and len(embedding) > 0 and isinstance(embedding[0], list):
                 return embedding[0]
-            return embedding.tolist() if hasattr(embedding, 'tolist') else embedding
+            return embedding.tolist() if hasattr(embedding, 'tolist') else list(embedding)
         except Exception as e:
-            if "loading" in str(e).lower():
-                print("Model is warming up on Hugging Face, waiting 20s...")
+            if "loading" in str(e).lower() and retry:
+                print("Model warming up on Hugging Face, waiting 20s...")
                 time.sleep(20)
-                return self.get_embedding(text)
+                return self.get_embedding(text, retry=False)  # only retry once
             raise e
 
     async def upsert_chunks(self, chunks: List[Dict]):
@@ -50,7 +45,6 @@ class VectorService:
 
         for i, chunk in enumerate(chunks):
             try:
-                # Get embedding using the robust client
                 embedding = self.get_embedding(chunk["content"])
                 
                 data_to_insert.append({
@@ -64,8 +58,7 @@ class VectorService:
                 if (i + 1) % 10 == 0:
                     print(f"✅ Generated {i + 1}/{total} embeddings...")
                 
-                # Small breathe time for the free tier
-                time.sleep(0.5)
+                time.sleep(0.1)  # reduced from 0.5s to 0.1s
             
             except Exception as e:
                 print(f"Error for {chunk['file_path']}: {e}")
@@ -94,7 +87,7 @@ class VectorService:
         
         rpc_params = {
             "query_embedding": query_embedding,
-            "match_threshold": 0.1, # Lowered threshold to see if we get anything
+            "match_threshold": 0.1,
             "match_count": limit,
         }
         
@@ -105,3 +98,4 @@ class VectorService:
         except Exception as e:
             print(f"❌ Supabase Search Error: {e}")
             return []
+            
