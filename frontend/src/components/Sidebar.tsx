@@ -6,9 +6,18 @@ import { MessageSquare, Clock, Plus, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 
+interface Proof {
+    file_path: string
+    start_line: number
+    end_line: number
+    content: string
+}
+
 interface Session {
     id: string
     query: string
+    answer: string
+    proof: Proof[]
     created_at: string
 }
 

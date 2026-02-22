@@ -171,7 +171,7 @@ export default function ChatInterface({
                 proof: res.data.proof
             }
             setMessages(prev => [...prev, botMsg])
-        } catch (_err) {
+        } catch {
             const botMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'bot',

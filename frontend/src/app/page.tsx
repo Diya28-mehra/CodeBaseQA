@@ -7,15 +7,29 @@ import ProofViewer from '@/components/ProofViewer'
 import IngestionPanel from '@/components/IngestionPanel'
 import { PanelLeftClose, PanelLeftOpen, Database, Sparkles, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { cn } from '@/lib/utils'
+
+interface Proof {
+  file_path: string
+  start_line: number
+  end_line: number
+  content: string
+}
+
+interface Session {
+  id: string
+  query: string
+  answer: string
+  proof: Proof[]
+  created_at: string
+}
 
 export default function Home() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-  const [selectedProof, setSelectedProof] = useState<any>(null)
+  const [selectedProof, setSelectedProof] = useState<Proof | null>(null)
   const [showIngestion, setShowIngestion] = useState(false)
-  const [selectedHistory, setSelectedHistory] = useState<any[]>([])
+  const [selectedHistory, setSelectedHistory] = useState<Session[]>([])
 
-  const handleSelectSession = (session: any) => {
+  const handleSelectSession = (session: Session) => {
     setSelectedHistory([session])
     setSelectedProof(null)
   }
