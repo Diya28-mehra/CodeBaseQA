@@ -80,12 +80,10 @@ async def ask_question(query_data: Query):
     Q&A Endpoint: Search similar chunks and generate an answer using LLM.
     """
     try:
-        # 1. Search for relevant code chunks (Reduced to 3 to fit Groq free tier tokens)
-        relevant_chunks = vector_service.search_similar_chunks(query_data.query, limit=3)
-        
-        if not relevant_chunks:
+        # 1. Check for Greeting (Fast Path)
+        if query_data.query.lower().strip() in ["hi", "hello", "hey", "greetings"]:
             return {
-                "answer": "I couldn't find any relevant code snippets. Please ensure the codebase is ingested.",
+                "answer": "Hi! I am CodeBaseQA. I can help you navigate and understand your codebase. What would you like to know?",
                 "proof": []
             }
         
@@ -94,10 +92,21 @@ async def ask_question(query_data: Query):
         # Reverse to get chronological order (Oldest -> Newest)
         history.reverse()
 
-        # 3. Generate answer using AIService
-        answer = ai_service.generate_answer(query_data.query, relevant_chunks, history)
+        # 3. Contextualize Query (Rewrite if needed)
+        search_query = ai_service.contextualize_query(query_data.query, history)
         
-        # 4. Save to History 
+        # 4. Search with refined query
+        relevant_chunks = vector_service.search_similar_chunks(search_query, limit=3)
+        
+        if not relevant_chunks and search_query != query_data.query:
+             # Fallback: if rewritten query fails, try original
+             relevant_chunks = vector_service.search_similar_chunks(query_data.query, limit=3)
+
+        # 5. Generate answer using AIService
+        # We pass the search_query so the LLM has the resolved context
+        answer = ai_service.generate_answer(search_query, relevant_chunks, history)
+        
+        # 6. Save to History (Save ORIGINAL query to preserve user intent in UI)
         session_service.save_session(query_data.query, answer, relevant_chunks)
         
         return {

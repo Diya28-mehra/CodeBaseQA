@@ -13,6 +13,48 @@ class AIService:
         
         self.model = "llama-3.1-8b-instant"
 
+    def contextualize_query(self, query: str, history: List[Dict]) -> str:
+        """
+        Rewrites the user query based on conversation history to make it self-contained for vector search.
+        """
+        if not self.client or not history:
+            return query
+
+        # Create a prompt for query rewriting
+        history_str = ""
+        for session in history[-3:]: 
+            history_str += f"User: {session.get('query', '')}\n"
+            history_str += f"Assistant: {session.get('answer', '')}\n\n"
+
+        prompt = f"""
+        Given the following conversation history and a new user query, rewrite the query to be self-contained and include any necessary context from the history.
+        Do NOT answer the question. Just rewrite the query.
+        
+        Conversation History:
+        {history_str}
+        
+        User Query: {query}
+        
+        Rewritten Query:
+        """
+        
+        try:
+            completion = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant that rewrites queries to be self-contained."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1,
+                max_tokens=200
+            )
+            rewritten = completion.choices[0].message.content.strip()
+            print(f"Original: {query} -> Rewritten: {rewritten}")
+            return rewritten
+        except Exception as e:
+            print(f"Error rewriting query: {e}")
+            return query
+
     def generate_answer(self, query: str, context_chunks: List[Dict], history: List[Dict] = []) -> str:
         """
         Syntheses an answer based on provided code chunks and conversation history.
@@ -20,6 +62,10 @@ class AIService:
         """
         if not self.client:
             return "Error: GROQ_API_KEY is missing."
+
+        # Handle Greetings
+        if query.lower().strip() in ["hi", "hello", "hey", "greetings"]:
+            return "Hi! I am CodeBaseQA. I can help you navigate and understand your codebase. What would you like to know?"
 
         if not context_chunks:
             return "I couldn't find any relevant code snippets."
