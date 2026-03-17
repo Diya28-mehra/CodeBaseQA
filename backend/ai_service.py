@@ -6,6 +6,7 @@ class AIService:
     def __init__(self):
         # Configure Groq
         api_key = os.getenv("GROQ_API_KEY")
+        print(f"GROQ API Key is present: {api_key[:4]}...{api_key[-4:]}" if api_key else "GROQ API Key is missing!")
         if not api_key:
             self.client = None
         else:
